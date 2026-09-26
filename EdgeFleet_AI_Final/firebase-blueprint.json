@@ -1,0 +1,144 @@
+{
+  "entities": {
+    "userProfile": {
+      "title": "UserProfile",
+      "description": "Registered operator or warehouse manager profile",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address",
+          "maxLength": 256
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User display name",
+          "maxLength": 100
+        },
+        "role": {
+          "type": "string",
+          "description": "Operator permission role",
+          "enum": ["operator", "lead", "engineer"],
+          "maxLength": 30
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Account creation timestamp"
+        }
+      },
+      "required": ["userId", "email", "createdAt"]
+    },
+    "warehouseLayout": {
+      "title": "WarehouseLayout",
+      "description": "Custom warehouse layout configuration with saved dynamic obstacles and zones",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique layout document ID",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "name": {
+          "type": "string",
+          "description": "User-assigned name for the warehouse floorplan",
+          "maxLength": 100
+        },
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the creator",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "obstacles": {
+          "type": "array",
+          "description": "Array of obstacle coordinates stored in layout"
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional layout note or warehouse facility code",
+          "maxLength": 250
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last updated timestamp"
+        }
+      },
+      "required": ["id", "name", "userId", "createdAt"]
+    },
+    "fleetMission": {
+      "title": "FleetMission",
+      "description": "Mission dispatch record and telemetry event log",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Mission identifier",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "Operator UID who dispatched or logged this mission",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "amrId": {
+          "type": "string",
+          "description": "Identifier of the assigned robot",
+          "maxLength": 32
+        },
+        "taskType": {
+          "type": "string",
+          "description": "Type of mission: transfer, deconflict, park, emergency_stop",
+          "maxLength": 50
+        },
+        "startNode": {
+          "type": "string",
+          "description": "Starting waypoint or dock ID",
+          "maxLength": 50
+        },
+        "destNode": {
+          "type": "string",
+          "description": "Destination waypoint or dock ID",
+          "maxLength": 50
+        },
+        "status": {
+          "type": "string",
+          "description": "Mission status",
+          "enum": ["dispatched", "in_transit", "completed", "halted"],
+          "maxLength": 30
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Mission dispatch timestamp"
+        }
+      },
+      "required": ["id", "userId", "amrId", "taskType", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "userProfile",
+      "description": "User profile records indexed by auth UID"
+    },
+    "/layouts/{layoutId}": {
+      "schema": "warehouseLayout",
+      "description": "Saved custom warehouse layouts created by operators"
+    },
+    "/missions/{missionId}": {
+      "schema": "fleetMission",
+      "description": "Dispatched autonomous fleet robot mission logs"
+    }
+  }
+}

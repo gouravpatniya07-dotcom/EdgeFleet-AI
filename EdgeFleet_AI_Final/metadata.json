@@ -1,0 +1,10 @@
+{
+  "name": "Remix Autonomous Mobile Robot Fleet Coordinator",
+  "description": "Edge-AI distributed peer-to-peer fleet coordination simulation for autonomous mobile robots in smart warehouses with real-time trajectory deconfliction.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

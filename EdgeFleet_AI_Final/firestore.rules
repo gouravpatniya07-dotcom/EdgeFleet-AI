@@ -1,0 +1,99 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all unknown routes
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // User profile validation
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.userId == request.auth.uid &&
+             data.email is string && data.email.size() <= 256 &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+             (!('role' in data) || (data.role is string && data.role.size() <= 30)) &&
+             data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    // Warehouse layout validation
+    function isValidLayout(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.userId == request.auth.uid &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 250)) &&
+             (!('obstacles' in data) || (data.obstacles is list && data.obstacles.size() <= 50)) &&
+             data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    // Fleet mission validation
+    function isValidMission(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.userId == request.auth.uid &&
+             data.amrId is string && data.amrId.size() <= 32 &&
+             data.taskType is string && data.taskType.size() <= 50 &&
+             data.status is string && data.status.size() <= 30 &&
+             (!('startNode' in data) || (data.startNode is string && data.startNode.size() <= 50)) &&
+             (!('destNode' in data) || (data.destNode is string && data.destNode.size() <= 50)) &&
+             data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(request.resource.data) &&
+                      request.resource.data.userId == userId;
+      allow update: if isOwner(userId) && isValidUserProfile(request.resource.data) &&
+                      request.resource.data.userId == resource.data.userId;
+      allow delete: if isOwner(userId);
+    }
+
+    // Layouts collection
+    match /layouts/{layoutId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid);
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(layoutId) &&
+                      isValidLayout(request.resource.data) &&
+                      request.resource.data.id == layoutId;
+      allow update: if isSignedIn() && isValidId(layoutId) &&
+                      resource.data.userId == request.auth.uid &&
+                      isValidLayout(request.resource.data) &&
+                      request.resource.data.userId == resource.data.userId &&
+                      request.resource.data.id == resource.data.id;
+      allow delete: if isSignedIn() && isValidId(layoutId) &&
+                      resource.data.userId == request.auth.uid;
+    }
+
+    // Fleet missions collection
+    match /missions/{missionId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid);
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(missionId) &&
+                      isValidMission(request.resource.data) &&
+                      request.resource.data.id == missionId;
+      allow update: if isSignedIn() && isValidId(missionId) &&
+                      resource.data.userId == request.auth.uid &&
+                      isValidMission(request.resource.data) &&
+                      request.resource.data.userId == resource.data.userId &&
+                      request.resource.data.id == resource.data.id;
+      allow delete: if isSignedIn() && isValidId(missionId) &&
+                      resource.data.userId == request.auth.uid;
+    }
+  }
+}
